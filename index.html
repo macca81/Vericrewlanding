@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriCrew - The Offline Digital Wallet for Professional Yacht Crew</title>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#020617', // Deep dark blue
+                            800: '#0f172a',
+                        },
+                        emerald: {
+                            400: '#34d399',
+                            500: '#10b981',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #020617;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #34d399;
+            outline: none;
+        }
+
+        /* Ambient Glow Effects */
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            z-index: -1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const App = () => {
+            const [email, setEmail] = useState('');
+            const [status, setStatus] = useState('idle'); // idle, loading, success, error
+
+            // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT URL
+            const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE";
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!email) return;
+
+                setStatus('loading');
+
+                try {
+                    // Using fetch with no-cors to avoid strict browser checks, 
+                    // though for a true success response we ideally want cors.
+                    // The App Script will be set up to return JSONP or CORS headers.
+                    /* 
+                       NOTE: Content-Type: application/json triggers preflight options which GAS doesn't handle well vertically.
+                       We will use x-www-form-urlencoded or text/plain to be safe or FormData.
+                    */
+                    const formData = new FormData();
+                    formData.append('email', email);
+                    formData.append('timestamp', new Date().toISOString());
+
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: formData,
+                        // mode: 'no-cors' // Use this if you get CORS errors, but you won't see response body
+                    });
+
+                    setStatus('success');
+                    setEmail('');
+                } catch (error) {
+                    console.error("Error:", error);
+                    setStatus('error');
+                }
+            };
+
+            return (
+                <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-12 overflow-hidden">
+
+                    {/* Background Orbs */}
+                    <div className="glow-orb w-96 h-96 bg-blue-900 top-0 left-0 -translate-x-1/2 -translate-y-1/2" />
+                    <div className="glow-orb w-[30rem] h-[30rem] bg-emerald-900/40 bottom-0 right-0 translate-x-1/3 translate-y-1/3" />
+
+                    {/* Main Container */}
+                    <main className="w-full max-w-4xl z-10 text-center">
+
+                        {/* Logo / Brand */}
+                        <div className="mb-8 animate-fade-in-down">
+                            <i className="fa-solid fa-anchor text-emerald-400 text-4xl mb-4"></i>
+                            <h2 className="text-xl font-bold tracking-widest uppercase text-emerald-400/80">VeriCrew</h2>
+                        </div>
+
+                        {/* Headline */}
+                        <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent">
+                            The Offline Digital Wallet <br />
+                            <span className="italic font-serif font-light text-emerald-100/90">for Professional Yacht Crew.</span>
+                        </h1>
+
+                        {/* Subheadline */}
+                        <p className="text-lg md:text-xl text-blue-100/70 mb-10 max-w-2xl mx-auto leading-relaxed">
+                            Stop carrying the black binder. Verify sea time and store certs securely.
+                            <br className="hidden md:block" /> Works <span className="text-emerald-400 font-semibold">100% offline</span> when you're crossing the Atlantic.
+                        </p>
+
+                        {/* Email Form */}
+                        <div className="max-w-md mx-auto mb-16 relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+
+                            <form onSubmit={handleSubmit} className="relative glass-card p-2 rounded-lg flex flex-col sm:flex-row gap-2">
+                                <input
+                                    type="email"
+                                    placeholder="Enter your email for early access..."
+                                    className="glass-input flex-1 px-4 py-3 rounded-md placeholder-blue-200/50"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    disabled={status === 'success'}
+                                    required
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={status === 'loading' || status === 'success'}
+                                    className={`px-6 py-3 rounded-md font-semibold transition-all duration-300 transform hover:scale-[1.02] shadow-lg
+                                        ${status === 'success'
+                                            ? 'bg-emerald-500 text-white cursor-default'
+                                            : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white'
+                                        }
+                                    `}
+                                >
+                                    {status === 'loading' && <i className="fas fa-spinner fa-spin mr-2"></i>}
+                                    {status === 'success' && <i className="fas fa-check mr-2"></i>}
+                                    {status === 'idle' && 'Join Waitlist'}
+                                    {status === 'loading' && 'Joining...'}
+                                    {status === 'success' && 'Joined!'}
+                                    {status === 'error' && 'Retry'}
+                                </button>
+                            </form>
+                            {status === 'success' && (
+                                <p className="text-emerald-400 mt-3 text-sm animate-fade-in">Thanks! We've secured your spot on the list.</p>
+                            )}
+                        </div>
+
+                        {/* Features Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+
+                            {/* Feature 1 */}
+                            <div className="glass-card p-6 rounded-xl hover:bg-white/5 transition-colors duration-300">
+                                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
+                                    <i className="fa-solid fa-wifi text-xl"></i>
+                                </div>
+                                <h3 className="text-lg font-bold mb-2">Works Offline</h3>
+                                <p className="text-sm text-blue-100/60">
+                                    Designed for ocean crossings. Access your credentials even with zero satellite connection.
+                                </p>
+                            </div>
+
+                            {/* Feature 2 */}
+                            <div className="glass-card p-6 rounded-xl hover:bg-white/5 transition-colors duration-300">
+                                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 text-blue-400">
+                                    <i className="fa-solid fa-shield-halved text-xl"></i>
+                                </div>
+                                <h3 className="text-lg font-bold mb-2">Bank-Grade Security</h3>
+                                <p className="text-sm text-blue-100/60">
+                                    AES-256 encryption ensures your passport and license data never leaves your device unencrypted.
+                                </p>
+                            </div>
+
+                            {/* Feature 3 */}
+                            <div className="glass-card p-6 rounded-xl hover:bg-white/5 transition-colors duration-300">
+                                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 text-purple-400">
+                                    <i className="fa-solid fa-file-signature text-xl"></i>
+                                </div>
+                                <h3 className="text-lg font-bold mb-2">Auto-FAL Forms</h3>
+                                <p className="text-sm text-blue-100/60">
+                                    Generate IMO FAL lists instantly from your stored crew data with a single tap.
+                                </p>
+                            </div>
+
+                        </div>
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="mt-20 text-blue-100/30 text-sm">
+                        &copy; {new Date().getFullYear()} VeriCrew Technologies. All rights reserved.
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
